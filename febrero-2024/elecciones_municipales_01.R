@@ -1,6 +1,5 @@
 library(tidyverse)
 library(ggbump)
-library(extrafont)
 
 df <- tibble::tribble(
                ~"name", ~"2002", ~"2006", ~"2010", ~"2016", ~"2020", ~"2024",
@@ -111,4 +110,9 @@ ggplot(df, aes(year, rank, color = name)) +
     axis.text.x = element_text(family = "Roboto")
   )
 
-ggsave(filename = "plot1.png", dpi = 400)
+ggsave(
+  filename = "plot1.png",
+  dpi = 400,
+  width = 10,
+  height = 5.89
+)
