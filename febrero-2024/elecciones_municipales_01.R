@@ -6,7 +6,8 @@ df <- tibble::tribble(
              "PLN", 27L, 59L, 59L, 50L, 43L, 29L,
             "PUSC", 48L, 11L,  9L, 14L, 15L, 20L,
              "PAC",  1L,  5L,  6L,  6L,  4L,  0L,
-      "Cantonales",  0L,  0L,  0L,  3L,  4L,  4L,
+             "PNG",  0L,  0L,  0L,  3L,  4L,  4L,
+      "Cantonales",  4L,  5L,  2L,  5L,  13L, 12L,
               "ML",  0L,  1L,  2L,  0L,  0L,  0L,
             "PASE",  0L,  0L,  2L,  1L,  0L,  0L,
              "PRC",  1L,  0L,  1L,  0L,  0L,  0L,
@@ -18,31 +19,35 @@ df <- tibble::tribble(
              "PNR",  0L,  0L,  0L,  0L,  0L,  2L
   )
 
+# verificar la cantidad de cantones entre 81 y 84
+colSums(df[,-1])
 
-df
-
-df <- df |> 
+df <- df |>
   pivot_longer(cols = -name, names_to = "year", values_to = "value",
                names_transform = \(x) as.numeric(x))
 
-df
 
-df <- df |> 
+
+df <- df |>
   mutate(
     name = case_when(
-      !name %in% c("PLN","PUSC","PAC","ML","PNR") ~ "Otros",
+      !name %in% {
+        df |>
+          filter(year == 2002, value >0) |>
+          pull(name)
+      } ~ "Otros",
       .default = name
     )
-  ) |> 
+  ) |>
   summarise(
-    value = sum(value), 
+    value = sum(value),
     .by = c(name,year)
-  ) |> 
-  arrange(year,desc(value)) |> 
+  ) |>
+  arrange(year,desc(value)) |>
   mutate(
     rank = row_number(),
     .by = c(year)
-  ) 
+  )
 
 ggplot(df, aes(year, rank, color = name)) +
   geom_point(size = 5, shape = "|") +
@@ -80,10 +85,10 @@ ggplot(df, aes(year, rank, color = name)) +
     values = c(
       "PLN" = "#508D69",
       "PUSC" = "#11235A",
-      "PAC" = "#FFD800",
-      "ML" = "#D04848",
+      "PAC" = "#F3B95F",
       "PNR" = "#59B4C3",
-      "Otros" = "#BEADFA"
+      "Cantonales" = "#A367B1",
+      "Otros" = "#D04848"
     )
   ) +
   theme_void(
@@ -93,7 +98,7 @@ ggplot(df, aes(year, rank, color = name)) +
   labs(
     title = "Distribución de alcaldías por partidos políticos",
     subtitle = "Evolución y tendencias electorales a nivel municipal (2002-2024)",
-    caption = "El conjunto de partidos llamado 'Otros' esta conformado por: partidos cantonales, PASE, PRC, PRSC, Unidos Podemos, PLP,\nFA y PPSD. Fuente de los datos: Tribunal Supremo Electoral (TSE)."
+    caption = "El conjunto de partidos denominado 'Otros' está conformado por los partidos que no tuvieron alcaldías en las\nelecciones de 2002. Fuente de los datos: Tribunal Supremo Electoral (TSE)."
   ) +
   theme(
     plot.background = element_rect(fill = "#F5EEE6", color = "#F5EEE6"),
@@ -111,7 +116,7 @@ ggplot(df, aes(year, rank, color = name)) +
   )
 
 ggsave(
-  filename = "plot1.png",
+  filename = "plot1v2.png",
   dpi = 400,
   width = 10,
   height = 5.89

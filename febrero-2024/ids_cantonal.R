@@ -1,11 +1,11 @@
 library(tidyverse)
-library(santoku)
 library(ggrepel)
 
 ids_cr <- read_csv(
-  file = "ids_cr_2013-2023.csv",
+  file = "data/ids_cr_2013-2023.csv",
   show_col_types = FALSE
-  )
+  ) |> 
+  drop_na()
 
 glimpse(ids_cr)
 
@@ -14,24 +14,35 @@ df <- ids_cr |>
     ids = mean(ids),
     .by = c(canton,version)
   ) |> 
-  filter(version %in% c(2013,2023)) |> 
+  filter(version %in% c(2017,2023)) |> 
   mutate(
-    aumenta = if_else(
-      (ids[1] - ids[2]) <= 0,
+    diferencia = ids[2]-ids[1],
+    cambio = if_else(
+       diferencia >= 0,
       "Mejora",
       "Empeora"
     ),
-    d = ids[2] - ids[1] ,
     .by = canton
   ) |> 
   drop_na() |> 
   mutate(
-    d = case_when(
-      between(d, -10,-5) ~ "Perdedores",
-      between(d, 10,15) ~ "Ganadores",
+    grupo = case_when(
+      canton %in% {
+        df |> 
+          filter(version == 2023) |> 
+          slice_min(diferencia, n = 5) |> 
+          pull(canton)
+      } ~ "Perdedores",
+      canton %in% {
+        df |> 
+          filter(version == 2023) |> 
+          slice_max(diferencia, n = 5) |> 
+          pull(canton)
+      } ~ "Ganadores",
       .default = "Otros"
     )
   )
+
 
 
 ggplot(
@@ -39,29 +50,84 @@ ggplot(
   mapping = aes(
     x = as.factor(version),
     y = ids,
-    color = d,
+    color = grupo,
     group = canton,
-    alpha = d
+    alpha = grupo
   )
 )   +
   geom_line(linewidth = 1) +
-  geom_text_repel(
-    data = filter(df, version == 2023, d != "Otros"),
+  geom_text(
+    data = {
+      filter(
+        df,
+        version == 2017,
+        grupo != "Otros",
+        cambio == "Empeora")
+    },
     mapping = aes(
-      label = canton
+      label = glue("{round(ids)}")
     ),
-    nudge_x = 0.05,
-    direction = "y",
+    nudge_x = -0.15,
     hjust = "left",
+    fontface = "bold"
+  ) +
+  geom_text_repel(
+    data = {
+      filter(
+        df,
+        version == 2023,
+        grupo != "Otros",
+        cambio == "Empeora")
+    },
+    mapping = aes(
+      label = glue("{canton} {round(diferencia)}")
+    ),
+    nudge_x = 0.8,
+    direction = "y",
+    hjust = "right",
     min.segment.length = 0.1,
     fontface = "bold"
   ) +
-  facet_wrap(~aumenta) +
+  
+  geom_text(
+    data = {
+      filter(
+        df,
+        version == 2017,
+        grupo != "Otros",
+        cambio == "Mejora")
+    },
+    mapping = aes(
+      label = glue("{round(ids)}")
+    ),
+    nudge_x = -0.05,
+    hjust = "right",
+    fontface = "bold"
+  ) +
+  
+  geom_text_repel(
+    data = {
+      filter(
+        df,
+        version == 2023,
+        grupo != "Otros",
+        cambio == "Mejora")
+    },
+    mapping = aes(
+      label = glue("{canton} +{round(diferencia)}")
+    ),
+    nudge_x = 0.65,
+    direction = "y",
+    hjust = "right",
+    min.segment.length = 0.1,
+    fontface = "bold"
+  ) +
+  facet_wrap(~cambio) +
   scale_alpha_manual(
     values = c(
       "Ganadores" = 1,
       "Perdedores" = 1,
-      "Otros" = 0.4
+      "Otros" = 0.2
     )
   ) + 
   labs(
@@ -92,12 +158,12 @@ ggplot(
     text = element_text(),
     legend.position = "none",
     panel.grid.major.x = element_line(
-      linewidth = 0.7,
+      linewidth = 0.2,
       color = "#DED0B6"
     ),
     axis.text.x = element_text(family = "Roboto")
   )
 
 ggsave(
-  filename = "plot2.png",
+  filename = "plot3.png",
   dpi = 400)
