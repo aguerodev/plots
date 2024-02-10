@@ -82,12 +82,12 @@ ggplot(df, aes(year, rank, color = name)) +
   ) +
   geom_bump(linewidth = 2) +
   scale_x_continuous(
-    limits = c(2000, 2027),
+    limits = c(1999, 2027),
     breaks = c(2002,2006,2010,2016,2020,2024)
   ) +
   scale_y_continuous(
     breaks = seq(1,6,1),
-    limits = c(0.8,6.5)
+    limits = c(0.3,6.7)
     ) +
   scale_color_manual(
     values = c(
@@ -98,6 +98,38 @@ ggplot(df, aes(year, rank, color = name)) +
       "Cantonales" = "#56B4E9",
       "Otros" = "#E69F00"
     )
+  ) +
+  annotate(
+    x = 2001.5,
+    y = 6.6,
+    geom = "text",
+    label = "Más alcaldías",
+    hjust = 1,
+    color = "#c9bda7"
+  ) +
+  annotate(
+    x = 2001.5,
+    y = 0.4,
+    geom = "text",
+    label = "Menos alcaldías",
+    hjust = 1,
+    color = "#c9bda7"
+  ) +
+  annotate(
+    x = 2024.5,
+    y = 6.6,
+    geom = "text",
+    label = "Más alcaldías",
+    hjust = 0,
+    color = "#c9bda7"
+  ) +
+  annotate(
+    x = 2024.5,
+    y = 0.4,
+    geom = "text",
+    label = "Menos alcaldías",
+    hjust = 0,
+    color = "#c9bda7"
   ) +
   theme_void(
     base_size = 16,
