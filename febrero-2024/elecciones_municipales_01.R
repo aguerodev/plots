@@ -1,5 +1,6 @@
 library(tidyverse)
 library(ggbump)
+library(ggokabeito)
 
 df <- tibble::tribble(
                ~"name", ~"2002", ~"2006", ~"2010", ~"2016", ~"2020", ~"2024",
@@ -23,29 +24,33 @@ df <- tibble::tribble(
 colSums(df[,-1])
 
 df <- df |>
-  pivot_longer(cols = -name, names_to = "year", values_to = "value",
-               names_transform = \(x) as.numeric(x))
+  pivot_longer(
+    cols = -name,
+    names_to = "year",
+    values_to = "value",
+    names_transform = \(x) as.numeric(x)
+  )
 
+# partidos con alcaldias en 2002
 
+names_2002 <- df |>
+  filter(year == 2002, value >0) |>
+  pull(name)
 
 df <- df |>
   mutate(
     name = case_when(
-      !name %in% {
-        df |>
-          filter(year == 2002, value >0) |>
-          pull(name)
-      } ~ "Otros",
+      !name %in% names_2002 ~ "Otros",
       .default = name
     )
   ) |>
+  # sumar por nombre y año
   summarise(
     value = sum(value),
     .by = c(name,year)
   ) |>
-  arrange(year,desc(value)) |>
   mutate(
-    rank = row_number(),
+    rank = row_number(value),
     .by = c(year)
   )
 
@@ -77,18 +82,21 @@ ggplot(df, aes(year, rank, color = name)) +
   ) +
   geom_bump(linewidth = 2) +
   scale_x_continuous(
-    limits = c(2000, 2026),
-    breaks = c(2002, 2006, 2010, 2016, 2020, 2024)
+    limits = c(2000, 2027),
+    breaks = c(2002,2006,2010,2016,2020,2024)
   ) +
-  scale_y_reverse(limits = c(5.5, 0.5)) +
+  scale_y_continuous(
+    breaks = seq(1,6,1),
+    limits = c(0.8,6.5)
+    ) +
   scale_color_manual(
     values = c(
-      "PLN" = "#508D69",
-      "PUSC" = "#11235A",
-      "PAC" = "#F3B95F",
-      "PNR" = "#59B4C3",
-      "Cantonales" = "#A367B1",
-      "Otros" = "#D04848"
+      "PLN" = "#009E73",
+      "PUSC" = "#0072B2",
+      "PAC" = "#d9ce3b",
+      "PNR" = "#D55E00",
+      "Cantonales" = "#56B4E9",
+      "Otros" = "#E69F00"
     )
   ) +
   theme_void(
@@ -96,16 +104,16 @@ ggplot(df, aes(year, rank, color = name)) +
     base_family = "Domine"
     ) +
   labs(
-    title = "Distribución de alcaldías por partidos políticos",
+    title = "¿Qué ha cambiado en los últimos 22 años?",
     subtitle = "Evolución y tendencias electorales a nivel municipal (2002-2024)",
-    caption = "El conjunto de partidos denominado 'Otros' está conformado por los partidos que no tuvieron alcaldías en las\nelecciones de 2002. Fuente de los datos: Tribunal Supremo Electoral (TSE)."
+    caption = "El conjunto de partidos denominado 'Otros' está conformado por los partidos que no obtuvieron alcaldías en las elecciones\nde 2002. El orden de los partidos está determinado por la cantidad de alcaldías obtenidas para cada uno de los años.\nFuente de los datos: Tribunal Supremo Electoral (TSE)."
   ) +
   theme(
     plot.background = element_rect(fill = "#F5EEE6", color = "#F5EEE6"),
     plot.margin = margin(10,10,10,10),
     plot.title = element_text(),
     plot.subtitle = element_text(margin = margin(t = 5, b = 10)),
-    plot.caption = element_text(margin = margin(t = 10), hjust = 0, size = 12),
+    plot.caption = element_text(margin = margin(t = 20), hjust = 0, size = 12),
     text = element_text(),
     legend.position = "none",
     panel.grid.major.x = element_line(
