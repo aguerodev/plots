@@ -8,9 +8,9 @@ datos <- read_csv("data/pelis_1937_2023.csv")
 glimpse(datos)
 
 top_ingresos <- datos |>
-  filter(fecha_estreno >= "2023-01-01") |> 
-  arrange(desc(ingresos)) |> 
-  select(titulo, director, ingresos) |> 
+  filter(fecha_estreno >= "2023-01-01") |>
+  arrange(desc(ingresos)) |>
+  select(titulo, director, ingresos) |>
   head(5)
 
 top_ingresos
@@ -20,7 +20,7 @@ ggplot(
   data = top_ingresos,
   mapping = aes(
     x = ingresos,
-    y = str_wrap(titulo, 20) |> 
+    y = str_wrap(titulo, 20) |>
       fct_reorder(ingresos),
     label = comma(ingresos/1000000),
     fill = titulo == "Barbie"
@@ -43,11 +43,18 @@ ggplot(
   ) +
   labs(
     title = "Barbie el mayor éxito en 2023",
-    subtitle = "Las 5 peliculas con mayor ingreso (millones USD)*",
+    subtitle = "Las 5 películas con mayor ingreso (millones USD)*",
     y = "",
     x = "",
     caption = "Fuente: The Movie Database (TMDB)\n*Actualizado a enero 2024"
   ) +
-  theme_minimal(base_size = 16)
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.title = element_text(
+      size = 22,
+      face = "bold",
+      color = "#E0218A"
+    )
+  )
 
 ggsave("plot_barbie.jpg", dpi = 400)
