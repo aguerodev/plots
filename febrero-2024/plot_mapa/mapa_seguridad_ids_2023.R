@@ -5,6 +5,7 @@ library(ows4R)
 library(janitor)
 library(rlang)
 library(tidyverse)
+library(readxl)
 library(santoku)
 
 
